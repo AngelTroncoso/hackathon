@@ -1,0 +1,8 @@
+{
+  "name": "SignMarket Studio",
+  "description": "IA Marketing Agent for Deaf Entrepreneurs",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
