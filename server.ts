@@ -2,30 +2,39 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
-import { CopilotRuntime, GoogleGenerativeAIAdapter } from "@copilotkit/runtime";
-import { createCopilotExpressHandler } from "@copilotkit/runtime/v2/express";
+import { CopilotRuntime, GoogleGenerativeAIAdapter, copilotRuntimeNodeExpressEndpoint } from "@copilotkit/runtime";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
 
 dotenv.config();
 
+console.log("Server module loading...");
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function startServer() {
+  console.log(`Starting server in ${process.env.NODE_ENV || 'development'} mode...`);
   const app = express();
   const PORT = 3000;
 
   // CopilotKit Runtime
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    console.warn("WARNING: GEMINI_API_KEY is not set. CopilotKit functionality will be limited.");
+  }
+
   const runtime = new CopilotRuntime();
   const serviceAdapter = new GoogleGenerativeAIAdapter({
-    model: "gemini-3-flash-preview",
+    model: "gemini-1.5-flash",
+    apiKey: apiKey || "dummy-key",
   });
 
-  app.use("/copilotkit", createCopilotExpressHandler({
+  app.use("/copilotkit", copilotRuntimeNodeExpressEndpoint({
+    endpoint: "/copilotkit",
     runtime,
     serviceAdapter,
-  } as any));
+  }));
 
   // API health check
   app.get("/api/health", (req, res) => {
@@ -56,8 +65,8 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`CopilotKit runtime at http://localhost:${PORT}/copilotkit`);
+    console.log(`Server successfully listening on 0.0.0.0:${PORT}`);
+    console.log(`CopilotKit endpoint ready at /copilotkit`);
   });
 }
 
